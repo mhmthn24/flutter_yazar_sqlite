@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -86,4 +88,108 @@ class YerelVeriTabani {
       """
     );
   }
+
+  // *********** CRUD (Create, Read, Update, Delete) Operasyonları ***********
+
+  Future<int> ekleKitap(KitapModel kitap) async {
+    /*
+    - Yeni bir kitap eklemek için kullanılır.
+    - "KitapModel" sınıfından bir kitap nesnesi alır ve veritabanına ekler.
+    - Eğer işlem başarılı olursa eklenen kaydın ID'sini döndürür.
+    - Eğer veritabanı bağlantısı başarısız olursa `-1` döndürerek hata olduğunu belirtir.
+  */
+    Database? db = await _getDatabase();
+
+    if(db != null){
+      // Eğer bağlantı başarılıysa kitabı ekleyelim ve
+      // eklenen verinin ID değerini döndürelim
+      return await db.insert(_kitap_tablo_adi, kitap.toMap());
+    }else{
+      // Başarısızsa -1 hata kodu döndürelim.
+      return -1;
+    }
+  }
+
+  Future<List<KitapModel>> getirTumKitaplar() async {
+    /*
+    - Veritabanında bulunan TÜM kitapları liste halinde getirir.
+    - "KitapModel" nesnesine dönüştürerek geri döndürür.
+    - Eğer veri yoksa boş liste döndürür.
+  */
+    Database? db = await _getDatabase();
+    List<KitapModel> kitaplar = [];
+    if(db != null){
+      // Tüm kitapları al
+      List<Map<String, dynamic>> tumKitaplar = await db.query(_kitap_tablo_adi);
+
+      for(Map<String, dynamic> map in tumKitaplar){
+        KitapModel kitap = KitapModel.fromMap(map); // Haritayı modele çevir
+        kitaplar.add(kitap); // Listeye ekle
+      }
+    }
+    return kitaplar; // Kitap listesi döndürülür
+  }
+
+  Future<List<KitapModel>> getirKitap(KitapModel kitapParam) async {
+    /*
+    - Belirli bir kitap ID'sine sahip kitabı getirir.
+    - Eğer kayıt bulunursa "KitapModel" nesnesi olarak döndürülür.
+    - Eğer kayıt yoksa boş bir liste döndürülür.
+  */
+    Database? db = await _getDatabase(); // Veritabanı bağlantısını alalım
+
+    if(db != null){
+      List<Map<String, dynamic>> mapList = await db.query(
+          _kitap_tablo_adi,
+          where: "$_kitap_id = ?",
+          whereArgs: [kitapParam.kitap_id] // Sadece belirli ID'deki kitabı getirelim
+      );
+      if (mapList.isNotEmpty) {
+        return [KitapModel.fromMap(mapList[0])]; // İlk bulunan kaydı döndürelim
+      } else {
+        return [];  // Eğer kayıt yoksa boş liste döndürelim
+      }
+    }
+    return []; // Bağlantı başarısızsa boş liste döndürelim
+  }
+
+  Future<int> guncelleKitap(KitapModel kitap) async {
+    /*
+    - Mevcut bir kitabın bilgilerini günceller.
+    - "kitap_id" değerine göre doğru kaydı bulur ve günceller.
+    - Eğer güncelleme başarılı olursa GÜNCELLENEN SATIR SAYISINI döndürür.
+    - Eğer veritabanına bağlanamazsa veya kayıt bulunamazsa 0 döndürülür.
+  */
+    Database? db = await _getDatabase();
+
+    if(db != null){
+      return await db.update(
+        _kitap_tablo_adi,
+        kitap.toMap(),
+        where: "$_kitap_id = ?", // Güncellenecek kitabı ID ile bulalım
+        whereArgs: [kitap.kitap_id],
+      );
+    }else{
+      return 0; // Hiçbir kayıt güncellenmezse 0 döndürelim.
+    }
+  }
+
+  Future<int> silKitap(KitapModel kitap) async {
+    /*
+    - Verilen kitap ID'sine sahip kaydı veritabanından siler.
+    - Eğer başarılı olursa SİLİNEN SATIR SAYISINI döndürür.
+    - Eğer veritabanına bağlanamazsa veya kayıt bulunamazsa 0 döndürülür.
+  */
+    Database? db = await _getDatabase();
+
+    if(db != null){
+      return await db.delete(
+        _kitap_tablo_adi,
+        where: "$_kitap_id = ?",
+        whereArgs: [kitap.kitap_id], // Silinecek kitabın ID'sini verelim
+      );
+    }
+    return 0; // Eğer silme başarısızsa 0 döndürelim
+  }
+
 }
