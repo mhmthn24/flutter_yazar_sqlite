@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 
-class Listelemetumkitaplar extends StatelessWidget {
+class Listelemetumkitaplar extends StatefulWidget {
 
+  @override
+  State<Listelemetumkitaplar> createState() => _ListelemetumkitaplarState();
+}
+
+class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,5 +65,4 @@ class Listelemetumkitaplar extends StatelessWidget {
       },
     );
   }
-
 }
