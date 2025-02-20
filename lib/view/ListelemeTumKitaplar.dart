@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
+import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 
 class Listelemetumkitaplar extends StatefulWidget {
 
@@ -8,6 +9,9 @@ class Listelemetumkitaplar extends StatefulWidget {
 }
 
 class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
+
+  YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +30,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   Widget _build_fab(BuildContext context){
     return FloatingActionButton(
       onPressed: (){
-        _build_alert_dialog(context);
+        ekleKitap(context);
       },
       child: Icon(Icons.add),
     );
@@ -57,12 +61,35 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
                     },
                     child: Text("Vazgeç")
                 ),
-                TextButton(onPressed: (){}, child: Text("Ekle"))
+                TextButton(
+                  onPressed: (){
+                    Navigator.pop(context, kitapAdi);
+                  },
+                  child: Text("Ekle"),
+                )
               ],
             )
           ],
         );
       },
     );
+  }
+
+  void ekleKitap(BuildContext context) async {
+    String? kitapAdi = await _build_alert_dialog(context);
+
+    if(kitapAdi != null){
+      KitapModel kitap = KitapModel(
+        kitapAdi,
+        DateTime.now(),
+        DateTime.now(),
+      );
+      int eklenen_kitap_id = await _yerelVeriTabani.ekleKitap(kitap);
+      print("Kitap ID: $eklenen_kitap_id");
+
+      if(eklenen_kitap_id != -1){
+        setState(() {});
+      }
+    }
   }
 }
