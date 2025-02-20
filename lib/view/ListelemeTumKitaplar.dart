@@ -13,6 +13,8 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
   List<KitapModel> _tumKitaplar = [];
 
+  TextEditingController _controllerKitapAdi = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +34,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   Widget _build_fab(BuildContext context){
     return FloatingActionButton(
       onPressed: (){
-        ekleKitap(context);
+        _ekleKitap(context);
       },
       child: Icon(Icons.add),
     );
@@ -96,7 +98,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         ),
         trailing: IconButton(
           onPressed: (){
-            silKitap(context, _tumKitaplar[index]);
+            _silKitap(context, _tumKitaplar[index]);
           },
           icon: Icon(
             Icons.delete,
@@ -104,20 +106,31 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
             color: Colors.white,
           ),
         ),
+        onTap: (){
+          _guncelleKitap(context, index);
+        },
       ),
     );
   }
 
-  Future<String?> _build_alert_dialog(BuildContext context){
+  Future<String?> _build_alert_dialog(
+    BuildContext context,
+    {KitapModel? updateKitap}
+  ){
     return showDialog<String>(
       context: context,
       builder: (context){
 
         String? kitapAdi;
-
+        if (updateKitap != null){
+          _controllerKitapAdi.text = updateKitap.kitap_ad;
+        }
         return AlertDialog(
-          title: Text("Kitap Ekle"),
+          title: updateKitap != null
+              ? Text("Kitap Güncelle")
+              : Text("Kitap Ekle"),
           content: TextField(
+            controller: _controllerKitapAdi,
             onChanged: (String kullaniciGiris){
               kitapAdi = kullaniciGiris;
             },
@@ -130,14 +143,22 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
                 TextButton(
                     onPressed: (){
                       Navigator.pop(context);
+                      setState(() {
+                        _controllerKitapAdi.clear();
+                      });
                     },
                     child: Text("Vazgeç")
                 ),
                 TextButton(
                   onPressed: (){
                     Navigator.pop(context, kitapAdi);
+                    setState(() {
+                      _controllerKitapAdi.clear();
+                    });
                   },
-                  child: Text("Ekle"),
+                  child: updateKitap != null
+                      ? Text("Güncelle")
+                      : Text("Ekle"),
                 )
               ],
             )
@@ -147,7 +168,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     );
   }
 
-  void ekleKitap(BuildContext context) async {
+  void _ekleKitap(BuildContext context) async {
     String? kitapAdi = await _build_alert_dialog(context);
 
     if(kitapAdi != null){
@@ -164,10 +185,29 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     }
   }
 
-  void silKitap(BuildContext context, KitapModel kitap) async {
+  void _silKitap(BuildContext context, KitapModel kitap) async {
     int silinenSatirSayisi = await _yerelVeriTabani.silKitap(kitap);
     if (silinenSatirSayisi != 0){
       setState(() {});
+    }
+  }
+
+  void _guncelleKitap(BuildContext context, int index) async {
+    String? yeniKitapAdi = await _build_alert_dialog(
+      context,
+      updateKitap: _tumKitaplar[index],
+    );
+
+    if(yeniKitapAdi != null){
+      KitapModel kitap = _tumKitaplar[index];
+      kitap.kitap_ad = yeniKitapAdi;
+      kitap.kitap_udate = DateTime.now();
+
+      int guncellenenSatirSayisi = await _yerelVeriTabani.guncelleKitap(kitap);
+
+      if(guncellenenSatirSayisi > 0){
+        setState(() {});
+      }
     }
   }
 
