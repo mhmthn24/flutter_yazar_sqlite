@@ -16,8 +16,8 @@ class KitapModel {
     return {
       "kitap_id": kitap_id,
       "kitap_ad": kitap_ad,
-      "kitap_cdate": kitap_cdate,
-      "kitap_udate": kitap_udate
+      "kitap_cdate": kitap_cdate.millisecondsSinceEpoch,
+      "kitap_udate": kitap_udate.millisecondsSinceEpoch,
     };
   }
 
