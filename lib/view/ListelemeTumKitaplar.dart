@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 
+/*
+  Bu sınıf, SQLite ile saklanan kitapları listelemek ve
+  yönetmek için oluşturulmuştur.
+
+  - Tüm kitapları listeleme
+  - Yeni kitap ekleme
+  - Kitap silme
+  - Kitap güncelleme
+    işlemlerini yapar.
+*/
+
 class Listelemetumkitaplar extends StatefulWidget {
 
   @override
@@ -10,62 +21,78 @@ class Listelemetumkitaplar extends StatefulWidget {
 
 class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
+  /*
+    SQLite veritabanı işlemleri için YerelVeriTabani
+    sınıfının bir nesnesi oluşturuldu.
+   */
   YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
+
+  // Veritabanından çekilen tüm kitapların tutulduğu liste
   List<KitapModel> _tumKitaplar = [];
 
+  // Kullanıcının kitap adı girmesi için TextField kontrolcüsü
   TextEditingController _controllerKitapAdi = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _build_appBar(),
-      floatingActionButton: _build_fab(context),
-      body: _build_body(context),
+      appBar: _build_appBar(), // Üst menüyü oluştur
+      floatingActionButton: _build_fab(context), // Yeni kitap ekleme butonu
+      body: _build_body(context), // Kitap listesini gösteren ana bileşen
     );
   }
 
-  //       ***************** Ekran Tasarim Islemleri *****************
+  // *************** EKRAN TASARIMI FONKSİYONLARI ***************
+
+  // Uygulamanın üst kısmında bulunan başlık (AppBar)
   AppBar _build_appBar(){
     return AppBar(
-      title: Text("Kitaplar"),
+      title: Text("Kitaplar"), // Sayfa başlığı
     );
   }
 
+  // Yeni kitap eklemek için "+" butonu
   Widget _build_fab(BuildContext context){
     return FloatingActionButton(
       onPressed: (){
-        _ekleKitap(context);
+        _ekleKitap(context); // Yeni kitap ekleme fonksiyonunu çağır
       },
-      child: Icon(Icons.add),
+      child: Icon(Icons.add), // Buton ikonu
     );
   }
 
+  // Sayfanın ana içeriği: Tüm kitapları listeleyen FutureBuilder
   Widget _build_body(BuildContext context){
     return FutureBuilder(
-      future: getirTumKitaplar(),
+      future: getirTumKitaplar(), // Veritabanından kitapları alalım
       builder: _build_FutureBuilder
     );
   }
 
+  // FutureBuilder, veriler geldiğinde listeyi oluşturur
   Widget _build_FutureBuilder(BuildContext context, AsyncSnapshot snapshot){
     return ListView.builder(
-      itemCount: _tumKitaplar.length,
-      itemBuilder: _build_ListView,
+      itemCount: _tumKitaplar.length, // Toplam kitap sayısı
+      itemBuilder: _build_ListView, // Her bir kitabı listede göster
     );
   }
 
+  // **ListView içinde tek bir kitap kartını oluşturur**
   Widget _build_ListView(BuildContext context, int index){
+
+    // Oluşturulma tarihini okunaklı bir formata çevirelim
     DateTime cdate = _tumKitaplar[index].kitap_cdate;
     String formatted_cdate = "${cdate.day}/${cdate.month}/${cdate.year}";
-    
+
+    // Güncellenme tarihini okunaklı bir formata çevir
     DateTime udate = _tumKitaplar[index].kitap_udate;
     String formatted_udate = "${udate.day}/${udate.month}/${udate.year}";
-    
+
     return Card(
-      color: Colors.blueAccent,
+      color: Colors.blueAccent, // Kartın arka plan rengini belirleyelim
       child: ListTile(
         title: Text(
-          _tumKitaplar[index].kitap_ad,
+          _tumKitaplar[index].kitap_ad, // Kitap adını başlık olarak verelim
           style: TextStyle(
             color: Colors.white,
           ),
@@ -73,7 +100,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         leading: CircleAvatar(
           backgroundColor: Colors.orange,
           child: Text(
-            _tumKitaplar[index].kitap_id.toString(),
+            _tumKitaplar[index].kitap_id.toString(), // Kitap ID
             style: TextStyle(
               color: Colors.white,
             ),
@@ -84,21 +111,15 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
           children: [
             Text(
               "Oluşturma Tarihi: $formatted_cdate",
-              style: TextStyle(
-                color: Colors.white,
+              style: TextStyle(color: Colors.white,
               ),
             ),
-            Text(
-              "Son Değiştirme Tarihi: $formatted_udate",
-              style: TextStyle(
-                color: Colors.white,
-              ),
-            )
+            Text("Son Değiştirme Tarihi: $formatted_udate", style: TextStyle(color: Colors.white))
           ],
         ),
         trailing: IconButton(
           onPressed: (){
-            _silKitap(context, _tumKitaplar[index]);
+            _silKitap(context, _tumKitaplar[index]); // Kitabı sil
           },
           icon: Icon(
             Icons.delete,
@@ -107,16 +128,24 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
           ),
         ),
         onTap: (){
-          _guncelleKitap(context, index);
+          _guncelleKitap(context, index); // Kitabı güncellemek için tıklandığında
         },
       ),
     );
   }
+  
+  // *************** CRUD İŞLEMLERİ ***************
 
   Future<String?> _build_alert_dialog(
     BuildContext context,
     {KitapModel? updateKitap}
   ){
+    /*
+    - Yeni bir kitap eklemek veya var olan bir kitabı güncellemek için
+      kullanıcıdan bilgi almak için bir giriş ekranı açar.
+    - Kullanıcının girdiği kitap adını döndürür.
+  */
+
     return showDialog<String>(
       context: context,
       builder: (context){
@@ -168,6 +197,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     );
   }
 
+  // Yeni kitap ekleme fonksiyonu
   void _ekleKitap(BuildContext context) async {
     String? kitapAdi = await _build_alert_dialog(context);
 
@@ -185,6 +215,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     }
   }
 
+  // Seçilen kitabı silme fonksiyonu
   void _silKitap(BuildContext context, KitapModel kitap) async {
     int silinenSatirSayisi = await _yerelVeriTabani.silKitap(kitap);
     if (silinenSatirSayisi != 0){
@@ -192,6 +223,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     }
   }
 
+  // Seçilen kitabı güncelleme fonksiyonu
   void _guncelleKitap(BuildContext context, int index) async {
     String? yeniKitapAdi = await _build_alert_dialog(
       context,
@@ -211,6 +243,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     }
   }
 
+  // Veritabanından tüm kitapları getirme fonksiyonu
   Future<void> getirTumKitaplar() async {
     _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar();
   }
