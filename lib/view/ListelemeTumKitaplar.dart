@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
-import 'package:sqflite/sqflite.dart';
 
 class Listelemetumkitaplar extends StatefulWidget {
 
@@ -96,7 +95,9 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
           ],
         ),
         trailing: IconButton(
-          onPressed: (){},
+          onPressed: (){
+            silKitap(context, _tumKitaplar[index]);
+          },
           icon: Icon(
             Icons.delete,
             size: 40,
@@ -163,9 +164,15 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     }
   }
 
-
+  void silKitap(BuildContext context, KitapModel kitap) async {
+    int silinenSatirSayisi = await _yerelVeriTabani.silKitap(kitap);
+    if (silinenSatirSayisi != 0){
+      setState(() {});
+    }
+  }
 
   Future<void> getirTumKitaplar() async {
     _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar();
   }
+
 }
