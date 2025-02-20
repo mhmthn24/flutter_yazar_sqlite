@@ -8,6 +8,7 @@ class KitapModel {
   KitapModel(this.kitap_ad, this.kitap_cdate, this.kitap_udate);
 
   KitapModel.fromMap(Map<String, dynamic> map):
+      kitap_id = map["kitap_id"],
       kitap_ad = map["kitap_ad"],
       kitap_cdate = DateTime.fromMillisecondsSinceEpoch(map["kitap_cdate"]),
       kitap_udate = DateTime.fromMillisecondsSinceEpoch(map["kitap_udate"]);
