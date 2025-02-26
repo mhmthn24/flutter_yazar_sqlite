@@ -37,7 +37,17 @@ class _DetaybolumState extends State<Detaybolum> {
   AppBar _buildAppBar(){
     return AppBar(
       title: Text(widget._bolum.bolum_ad),
-      automaticallyImplyLeading: true,
+      automaticallyImplyLeading: false,
+      leading: IconButton(
+        onPressed: () async {
+          if(degisiklikVar){
+            _buildAlertDialog(context);
+          }else{
+            Navigator.pop(context);
+          }
+        },
+        icon: Icon(Icons.arrow_back),
+      ),
       actions: [
         IconButton(
           onPressed: degisiklikVar
@@ -85,6 +95,40 @@ class _DetaybolumState extends State<Detaybolum> {
     await _yerelVeriTabani.guncelleBolum(widget._bolum);
     setState(() {
       degisiklikVar = false;
+    });
+  }
+
+  Future<bool?> _buildAlertDialog(BuildContext context){
+    return showDialog<bool>(context: context, builder: (context){
+      return AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Değişiklikleri kaydetmek ister misiniz?"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                TextButton(
+                  onPressed: (){
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: Text("Hayır"),
+                ),
+                TextButton(
+                  onPressed: (){
+                    _icerigiKaydet();
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: Text("Evet"),
+                ),
+              ],
+            )
+          ],
+        ),
+      );
     });
   }
 }
