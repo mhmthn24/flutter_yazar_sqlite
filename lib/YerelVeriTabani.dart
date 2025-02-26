@@ -129,9 +129,16 @@ class YerelVeriTabani {
       int oldVersion,
       int newVersion,
   ) async {
-    await db.execute(
+
+    // Eğer veri tabanında güncelleme yapılacaksa komutu listeye ekleyelim.
+    List<String> guncellemeler = [
       "ALTER TABLE $_kitap_tablo_adi ADD COLUMN $_kitap_kategori INTEGER DEFAULT 0"
-    );
+    ];
+
+    for(int i = oldVersion-1; i < newVersion-1; i++){
+      await db.execute(guncellemeler[i]);
+    }
+
   }
 
   // ********************** Kitap Model **********************
