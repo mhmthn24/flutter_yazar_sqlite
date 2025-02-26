@@ -21,14 +21,14 @@ class BolumModel {
     bolum_cdate = DateTime.fromMillisecondsSinceEpoch(map["bolum_cdate"]),
     bolum_udate = DateTime.fromMillisecondsSinceEpoch(map["bolum_udate"]);
 
-  Map<String, dynamic> toMap(BolumModel bolum){
+  Map<String, dynamic> toMap(){
     return {
       "bolum_id" : bolum_id,
       "bolum_kitap_id" : bolum_kitap_id,
       "bolum_ad" : bolum_ad,
       "bolum_icerik" : bolum_icerik,
-      "bolum_cdate" : bolum_cdate,
-      "bolum_udate" : bolum_udate,
+      "bolum_cdate" : bolum_cdate.millisecondsSinceEpoch,
+      "bolum_udate" : bolum_udate.millisecondsSinceEpoch,
     };
   }
   
