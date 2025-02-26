@@ -40,7 +40,7 @@ class _ListelemekitapbolumlerState extends State<Listelemekitapbolumler> {
   // Uygulamanın üst kısmında bulunan başlık (AppBar)
   AppBar _build_appBar(){
     return AppBar(
-      title: Text("Bolumler"), // Sayfa başlığı
+      title: Text("${widget._kitap.kitap_ad} Bölümleri"), // Sayfa başlığı
     );
   }
 

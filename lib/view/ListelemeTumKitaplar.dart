@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
+import 'package:flutter_yazar_sqlite/sabitler.dart';
 import 'package:flutter_yazar_sqlite/view/ListelemeKitapBolumler.dart';
 
 /*
@@ -146,7 +147,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   
   // *************** CRUD İŞLEMLERİ ***************
 
-  Future<String?> _build_alert_dialog(
+  Future<Map<String, dynamic>?> _build_alert_dialog(
     BuildContext context,
     {KitapModel? updateKitap}
   ){
@@ -156,23 +157,69 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     - Kullanıcının girdiği kitap adını döndürür.
   */
 
-    return showDialog<String>(
+    return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context){
 
         String? kitapAdi;
+        int kategori = 0;
         if (updateKitap != null){
           _controllerKitapAdi.text = updateKitap.kitap_ad;
+          kategori = updateKitap.kitap_kategori;
         }
         return AlertDialog(
           title: updateKitap != null
               ? Text("Kitap Güncelle")
               : Text("Kitap Ekle"),
-          content: TextField(
-            controller: _controllerKitapAdi,
-            onChanged: (String kullaniciGiris){
-              kitapAdi = kullaniciGiris;
-            },
+          content: StatefulBuilder(
+            builder: (
+              BuildContext context,
+              void Function(
+                  void Function()
+              ) setState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _controllerKitapAdi,
+                      onChanged: (String kullaniciGiris){
+                        kitapAdi = kullaniciGiris;
+                      },
+                    ),
+                    SizedBox(height: 16,),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Kategori: ",
+                            style: TextStyle(
+                                fontSize: 16
+                            ),
+                          ),
+                          DropdownButton<int>(
+                            value: kategori,
+                            items: Sabitler.kategoriler.keys.map((kategoriID){
+                              return DropdownMenuItem<int>(
+                                value: kategoriID,
+                                child: Text(Sabitler.kategoriler[kategoriID] ?? ""),
+                              );
+                            }).toList(),
+                            onChanged: (int? yeniID){
+                              if (yeniID != null){
+                                setState(() {
+                                  kategori = yeniID;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
           ),
           actions: [
             Row(
@@ -190,10 +237,19 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
                 ),
                 TextButton(
                   onPressed: (){
-                    Navigator.pop(context, kitapAdi);
-                    setState(() {
-                      _controllerKitapAdi.clear();
-                    });
+                    if (_controllerKitapAdi.text != ""
+                        && _controllerKitapAdi.text != null){
+                      Map<String, dynamic> alertDialogParams = {
+                        "kitap_ad": _controllerKitapAdi.text,
+                        "kitap_kategori": kategori,
+                      };
+                      Navigator.pop(context, alertDialogParams);
+                      setState(() {
+                        _controllerKitapAdi.clear();
+                      });
+                    }
+
+
                   },
                   child: updateKitap != null
                       ? Text("Güncelle")
@@ -209,13 +265,15 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
   // Yeni kitap ekleme fonksiyonu
   void _ekleKitap(BuildContext context) async {
-    String? kitapAdi = await _build_alert_dialog(context);
 
-    if(kitapAdi != null){
+    Map<String, dynamic>? alertGelenParams = await _build_alert_dialog(context);
+
+    if(alertGelenParams != null){
       KitapModel kitap = KitapModel(
-        kitapAdi,
-        DateTime.now(),
-        DateTime.now(),
+          alertGelenParams["kitap_ad"],
+          DateTime.now(),
+          DateTime.now(),
+          alertGelenParams["kitap_kategori"]
       );
       int eklenenKitapId = await _yerelVeriTabani.ekleKitap(kitap);
 
@@ -223,6 +281,21 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         setState(() {});
       }
     }
+    /*
+    if(kitapAdi != null){
+      KitapModel kitap = KitapModel(
+        kitapAdi,
+        DateTime.now(),
+        DateTime.now(),
+        Sabitler.kategoriler[]
+      );
+      int eklenenKitapId = await _yerelVeriTabani.ekleKitap(kitap);
+
+      if(eklenenKitapId != -1){
+        setState(() {});
+      }
+    }
+     */
   }
 
   // Seçilen kitabı silme fonksiyonu
@@ -235,6 +308,24 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
   // Seçilen kitabı güncelleme fonksiyonu
   void _guncelleKitap(BuildContext context, int index) async {
+    Map<String, dynamic>? alertGelenParam = await _build_alert_dialog(
+      context,
+      updateKitap: _tumKitaplar[index]
+    );
+
+    if (alertGelenParam != null){
+      KitapModel kitap = _tumKitaplar[index];
+      kitap.kitap_ad = alertGelenParam["kitap_ad"];
+      kitap.kitap_kategori = alertGelenParam["kitap_kategori"];
+      kitap.kitap_udate = DateTime.now();
+
+      int guncellenenSatirSayisi = await _yerelVeriTabani.guncelleKitap(kitap);
+
+      if(guncellenenSatirSayisi > 0){
+        setState(() {});
+      }
+    }
+    /*
     String? yeniKitapAdi = await _build_alert_dialog(
       context,
       updateKitap: _tumKitaplar[index],
@@ -251,6 +342,8 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         setState(() {});
       }
     }
+
+     */
   }
 
   // Veritabanından tüm kitapları getirme fonksiyonu
