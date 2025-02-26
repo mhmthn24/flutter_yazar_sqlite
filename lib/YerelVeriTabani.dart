@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 import 'package:sqflite/sqflite.dart';
@@ -33,6 +35,7 @@ class YerelVeriTabani {
   final String _kitap_ad = "kitap_ad";      // Kitap adı
   final String _kitap_cdate = "kitap_cdate"; // Kitabın oluşturulma tarihi (milisaniye cinsinden)
   final String _kitap_udate = "kitap_udate"; // Kitabın güncellenme tarihi (milisaniye cinsinden)
+  final String _kitap_kategori = "kitap_kategori"; // Kitabın kategori tablo adı
 
   // Bölüm Tablo ve sütun isimlerini sabit değişkenler olarak tanımlıyoruz.
   final String _bolum_tablo_adi = "bolumler";
@@ -66,9 +69,11 @@ class YerelVeriTabani {
         // Veri tabanı yolunu veriyoruz
         databasePath,
         // Veri tabanı versiyonu (Eğer yapısal değişiklik olursa artırılmalı)
-        version: 1,
+        version: 2,
         // Eğer veri tabanı yoksa bu fonksiyon çağrılacak
-        onCreate: _createTable
+        onCreate: _createTable,
+        // Veri tabanı versiyonu değişince bu fonksiyon çalışacak
+        onUpgrade: _updateTable
     );
 
     return _database!;
@@ -91,7 +96,8 @@ class YerelVeriTabani {
         $_kitap_id INTEGER NOT NULL UNIQUE PRIMARY KEY AUTOINCREMENT,  -- Benzersiz kitap ID'si
         $_kitap_ad TEXT NOT NULL,  -- Kitap adı zorunlu
         $_kitap_cdate INTEGER,  -- Kitabın oluşturulma tarihi (millisecondsSinceEpoch formatında)
-        $_kitap_udate INTEGER   -- Kitabın güncellenme tarihi (millisecondsSinceEpoch formatında)
+        $_kitap_udate INTEGER,   -- Kitabın güncellenme tarihi (millisecondsSinceEpoch formatında)
+        $_kitap_kategori INTEGER DEFAULT 0
       );
       """
     );
@@ -115,6 +121,16 @@ class YerelVeriTabani {
         ON UPDATE CASCADE ON DELETE CASCADE    
       );
       """
+    );
+  }
+
+  Future<void> _updateTable(
+      Database db,
+      int oldVersion,
+      int newVersion,
+  ) async {
+    await db.execute(
+      "ALTER TABLE $_kitap_tablo_adi ADD COLUMN $_kitap_kategori INTEGER DEFAULT 0"
     );
   }
 
