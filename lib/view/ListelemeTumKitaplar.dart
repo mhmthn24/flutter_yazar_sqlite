@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
+import 'package:flutter_yazar_sqlite/view/ListelemeKitapBolumler.dart';
 
 /*
   Bu sınıf, SQLite ile saklanan kitapları listelemek ve
@@ -14,6 +15,8 @@ import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 */
 
 class Listelemetumkitaplar extends StatefulWidget {
+  const Listelemetumkitaplar({super.key});
+
 
   @override
   State<Listelemetumkitaplar> createState() => _ListelemetumkitaplarState();
@@ -25,13 +28,13 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     SQLite veritabanı işlemleri için YerelVeriTabani
     sınıfının bir nesnesi oluşturuldu.
    */
-  YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
+  final YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
 
   // Veritabanından çekilen tüm kitapların tutulduğu liste
   List<KitapModel> _tumKitaplar = [];
 
   // Kullanıcının kitap adı girmesi için TextField kontrolcüsü
-  TextEditingController _controllerKitapAdi = TextEditingController();
+  final TextEditingController _controllerKitapAdi = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +58,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   Widget _build_fab(BuildContext context){
     return FloatingActionButton(
       onPressed: (){
+        _controllerKitapAdi.clear();
         _ekleKitap(context); // Yeni kitap ekleme fonksiyonunu çağır
       },
       child: Icon(Icons.add), // Buton ikonu
@@ -82,19 +86,19 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
     // Oluşturulma tarihini okunaklı bir formata çevirelim
     DateTime cdate = _tumKitaplar[index].kitap_cdate;
-    String formatted_cdate = "${cdate.day}/${cdate.month}/${cdate.year}";
+    String formattedCdate = "${cdate.day}/${cdate.month}/${cdate.year}";
 
     // Güncellenme tarihini okunaklı bir formata çevir
     DateTime udate = _tumKitaplar[index].kitap_udate;
-    String formatted_udate = "${udate.day}/${udate.month}/${udate.year}";
+    String formattedUdate = "${udate.day}/${udate.month}/${udate.year}";
 
     return Card(
-      color: Colors.blueAccent, // Kartın arka plan rengini belirleyelim
+      color: Colors.cyanAccent, // Kartın arka plan rengini belirleyelim
       child: ListTile(
         title: Text(
           _tumKitaplar[index].kitap_ad, // Kitap adını başlık olarak verelim
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         leading: CircleAvatar(
@@ -102,33 +106,39 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
           child: Text(
             _tumKitaplar[index].kitap_id.toString(), // Kitap ID
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black,
             ),
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text(
-              "Oluşturma Tarihi: $formatted_cdate",
-              style: TextStyle(color: Colors.white,
+            IconButton(
+              onPressed: (){
+                _silKitap(context, _tumKitaplar[index]); // Kitabı sil
+              },
+              icon: Icon(
+                Icons.delete,
+                size: 40,
+                color: Colors.black,
               ),
             ),
-            Text("Son Değiştirme Tarihi: $formatted_udate", style: TextStyle(color: Colors.white))
+            IconButton(
+              onPressed: (){
+                _guncelleKitap(context, index); // Kitabı guncelle
+              },
+              icon: Icon(
+                Icons.edit,
+                size: 40,
+                color: Colors.black,
+              ),
+            ),
           ],
         ),
-        trailing: IconButton(
-          onPressed: (){
-            _silKitap(context, _tumKitaplar[index]); // Kitabı sil
-          },
-          icon: Icon(
-            Icons.delete,
-            size: 40,
-            color: Colors.white,
-          ),
-        ),
         onTap: (){
-          _guncelleKitap(context, index); // Kitabı güncellemek için tıklandığında
+          gitBolumler(context, _tumKitaplar[index]);
         },
       ),
     );
@@ -207,9 +217,9 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         DateTime.now(),
         DateTime.now(),
       );
-      int eklenen_kitap_id = await _yerelVeriTabani.ekleKitap(kitap);
+      int eklenenKitapId = await _yerelVeriTabani.ekleKitap(kitap);
 
-      if(eklenen_kitap_id != -1){
+      if(eklenenKitapId != -1){
         setState(() {});
       }
     }
@@ -248,4 +258,10 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar();
   }
 
+  void gitBolumler(BuildContext context, KitapModel kitap){
+    MaterialPageRoute gidilecekSayfa = MaterialPageRoute(builder: (context){
+      return Listelemekitapbolumler(kitap);
+    });
+    Navigator.push(context, gidilecekSayfa);
+  }
 }
