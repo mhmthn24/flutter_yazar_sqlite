@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -27,13 +27,21 @@ class YerelVeriTabani {
   // Veri tabanı bağlantısını tutacak değişken
   Database? _database;
 
-  // Tablo ve sütun isimlerini sabit değişkenler olarak tanımlıyoruz.
-  String _kitap_tablo_adi = "kitap";  // Tablo adı
-  String _kitap_id = "kitap_id";      // Kitapların benzersiz ID'si
-  String _kitap_ad = "kitap_ad";      // Kitap adı
-  String _kitap_cdate = "kitap_cdate"; // Kitabın oluşturulma tarihi (milisaniye cinsinden)
-  String _kitap_udate = "kitap_udate"; // Kitabın güncellenme tarihi (milisaniye cinsinden)
+  // Kitap Tablo ve sütun isimlerini sabit değişkenler olarak tanımlıyoruz.
+  final String _kitap_tablo_adi = "kitap";  // Tablo adı
+  final String _kitap_id = "kitap_id";      // Kitapların benzersiz ID'si
+  final String _kitap_ad = "kitap_ad";      // Kitap adı
+  final String _kitap_cdate = "kitap_cdate"; // Kitabın oluşturulma tarihi (milisaniye cinsinden)
+  final String _kitap_udate = "kitap_udate"; // Kitabın güncellenme tarihi (milisaniye cinsinden)
 
+  // Bölüm Tablo ve sütun isimlerini sabit değişkenler olarak tanımlıyoruz.
+  final String _bolum_tablo_adi = "bolumler";
+  final String _bolum_id = "bolum_id";
+  final String _bolum_kitap_id = "bolum_kitap_id";
+  final String _bolum_ad = "bolum_ad";
+  final String _bolum_icerik = "bolum_icerik";
+  final String _bolum_cdate = "bolum_cdate";
+  final String _bolum_udate = "bolum_udate";
 
   Future<Database> _getDatabase() async {
     /*
@@ -71,9 +79,9 @@ class YerelVeriTabani {
     Tabloyu oluşturma fonksiyonu
 
     - Eğer veri tabanı daha önce oluşturulmadıysa, bu fonksiyon çağrılarak
-      'kitaplar' tablosu oluşturulur.
+      'kitaplar' ve 'bolumler' tabloları oluşturulur.
 
-    - `_kitap_cdate` ve `_kitap_udate` sütunları INTEGER olarak tanımlandı.
+    - `_cdate` ve `_udate` sütunları INTEGER olarak tanımlandı.
       Çünkü tarih bilgileri 'millisecondsSinceEpoch' formatında kaydedilecek.
   */
 
@@ -87,8 +95,30 @@ class YerelVeriTabani {
       );
       """
     );
+
+    await db.execute(
+        """
+      CREATE TABLE $_bolum_tablo_adi (
+        -- Benzersiz kitap ID'si
+        $_bolum_id INTEGER NOT NULL UNIQUE PRIMARY KEY AUTOINCREMENT,  
+        -- Kitap ID bilgisi zorunlu
+        $_bolum_kitap_id INTEGER NOT NULL,  
+        -- Bölüm adı zorunlu
+        $_bolum_ad TEXT NOT NULL,  
+        -- Kitap adı zorunlu
+        $_bolum_icerik TEXT,  
+        -- Bölümün oluşturulma tarihi (millisecondsSinceEpoch formatında)
+        $_bolum_cdate INTEGER,  
+        -- Bölümün güncellenme tarihi (millisecondsSinceEpoch formatında)
+        $_bolum_udate INTEGER,
+        FOREIGN KEY($_bolum_kitap_id) REFERENCES $_kitap_tablo_adi($_kitap_id) 
+        ON UPDATE CASCADE ON DELETE CASCADE    
+      );
+      """
+    );
   }
 
+  // ********************** Kitap Model **********************
   // *********** CRUD (Create, Read, Update, Delete) Operasyonları ***********
 
   Future<int> ekleKitap(KitapModel kitap) async {
@@ -190,6 +220,98 @@ class YerelVeriTabani {
       );
     }
     return 0; // Eğer silme başarısızsa 0 döndürelim
+  }
+
+  // ********************** Bölüm Model **********************
+  // *********** CRUD (Create, Read, Update, Delete) Operasyonları ***********
+
+  Future<int> ekleBolum(BolumModel bolum) async {
+    /*
+    - Yeni bir kitap eklemek için kullanılır.
+    - "KitapModel" sınıfından bir kitap nesnesi alır ve veritabanına ekler.
+    - Eğer işlem başarılı olursa eklenen kaydın ID'sini döndürür.
+    - Eğer veritabanı bağlantısı başarısız olursa `-1` döndürerek hata olduğunu belirtir.
+  */
+    Database? db = await _getDatabase();
+
+    // Eğer bağlantı başarılıysa kitabı ekleyelim ve
+    // eklenen verinin ID değerini döndürelim
+    return await db.insert(_bolum_tablo_adi, bolum.toMap());
+  }
+
+  Future<List<BolumModel>> getirKitabinTumBolumleri(KitapModel kitap) async {
+    /*
+    - Veritabanında bulunan belirli kitaba ait bölümleri liste halinde getirir.
+    - "KitapModel" nesnesine dönüştürerek geri döndürür.
+    - Eğer veri yoksa boş liste döndürür.
+  */
+    Database? db = await _getDatabase();
+    List<BolumModel> bolumler = [];
+    // Tüm kitapları al
+    List<Map<String, dynamic>> tumBolumler = await db.query(
+      _bolum_tablo_adi,
+      where: "$_bolum_kitap_id = ?",
+      whereArgs: [kitap.kitap_id]
+    );
+
+    for(Map<String, dynamic> map in tumBolumler){
+      BolumModel bolum = BolumModel.fromMap(map); // Haritayı modele çevir
+      bolumler.add(bolum); // Listeye ekle
+    }
+    return bolumler; // Kitap listesi döndürülür
+  }
+
+  Future<List<BolumModel>> getirBolum(BolumModel bolum) async {
+    /*
+    - Belirli bir bolum ID'sine sahip bolum getirir.
+    - Eğer kayıt bulunursa "BolumModel" nesnesi olarak döndürülür.
+    - Eğer kayıt yoksa boş bir liste döndürülür.
+  */
+    Database? db = await _getDatabase(); // Veritabanı bağlantısını alalım
+
+    List<Map<String, dynamic>> mapList = await db.query(
+        _bolum_tablo_adi,
+        where: "$_bolum_id = ?",
+        whereArgs: [bolum.bolum_id] // Sadece belirli ID'deki kitabı getirelim
+    );
+
+    if (mapList.isNotEmpty) {
+      return [BolumModel.fromMap(mapList[0])]; // İlk bulunan kaydı döndürelim
+    } else {
+      return [];  // Eğer kayıt yoksa boş liste döndürelim
+    }
+  }
+
+  Future<int> guncelleBolum(BolumModel bolum) async {
+    /*
+    - Mevcut bir bolumun bilgilerini günceller.
+    - "bolum_id" değerine göre doğru kaydı bulur ve günceller.
+    - Eğer güncelleme başarılı olursa GÜNCELLENEN SATIR SAYISINI döndürür.
+    - Eğer veritabanına bağlanamazsa veya kayıt bulunamazsa 0 döndürülür.
+  */
+    Database? db = await _getDatabase();
+
+    return await db.update(
+      _bolum_tablo_adi,
+      bolum.toMap(),
+      where: "$_bolum_id = ?", // Güncellenecek kitabı ID ile bulalım
+      whereArgs: [bolum.bolum_id],
+    );
+  }
+
+  Future<int> silBolum(BolumModel bolum) async {
+    /*
+    - Verilen bolum ID'sine sahip kaydı veritabanından siler.
+    - Eğer başarılı olursa SİLİNEN SATIR SAYISINI döndürür.
+    - Eğer veritabanına bağlanamazsa veya kayıt bulunamazsa 0 döndürülür.
+  */
+    Database? db = await _getDatabase();
+
+    return await db.delete(
+      _bolum_tablo_adi,
+      where: "$_bolum_id = ?",
+      whereArgs: [bolum.bolum_id], // Silinecek kitabın ID'sini verelim
+    );
   }
 
 }
