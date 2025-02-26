@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
+import 'package:flutter_yazar_sqlite/view/DetayBolum.dart';
 
 class Listelemekitapbolumler extends StatefulWidget {
   KitapModel _kitap;
@@ -127,7 +128,7 @@ class _ListelemekitapbolumlerState extends State<Listelemekitapbolumler> {
           ],
         ),
         onTap: (){
-          //gitBolumler(context, _tumBolumler[index]);
+          gitBolumDetay(context, _tumBolumler[index]);
         },
       ),
     );
@@ -247,6 +248,13 @@ class _ListelemekitapbolumlerState extends State<Listelemekitapbolumler> {
   // Veritabanından tüm bolumları getirme fonksiyonu
   Future<void> getirTumBolumlar() async {
     _tumBolumler = await _yerelVeriTabani.getirKitabinTumBolumleri(widget._kitap);
+  }
+
+  void gitBolumDetay(BuildContext context, BolumModel bolum){
+    MaterialPageRoute gidilecekSayfa = MaterialPageRoute(builder: (context){
+      return Detaybolum(bolum);
+    });
+    Navigator.push(context, gidilecekSayfa);
   }
 
 }
