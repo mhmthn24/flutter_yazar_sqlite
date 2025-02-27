@@ -37,6 +37,15 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   // Kullanıcının kitap adı girmesi için TextField kontrolcüsü
   final TextEditingController _controllerKitapAdi = TextEditingController();
 
+  List<int> _tumKategoriler = [-1];
+  int secilenKategori = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _tumKategoriler.addAll(Sabitler.kategoriler.keys);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,9 +85,16 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
   // FutureBuilder, veriler geldiğinde listeyi oluşturur
   Widget _build_FutureBuilder(BuildContext context, AsyncSnapshot snapshot){
-    return ListView.builder(
-      itemCount: _tumKitaplar.length, // Toplam kitap sayısı
-      itemBuilder: _build_ListView, // Her bir kitabı listede göster
+    return Column(
+      children: [
+        _build_kategoriler(),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _tumKitaplar.length, // Toplam kitap sayısı
+            itemBuilder: _build_ListView, // Her bir kitabı listede göster
+          ),
+        ),
+      ],
     );
   }
 
@@ -101,6 +117,9 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
           style: TextStyle(
             color: Colors.black,
           ),
+        ),
+        subtitle: Text(
+          Sabitler.kategoriler[_tumKitaplar[index].kitap_kategori] ?? "",
         ),
         leading: CircleAvatar(
           backgroundColor: Colors.orange,
@@ -144,7 +163,43 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
       ),
     );
   }
-  
+
+  Widget _build_kategoriler(){
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Text(
+            "Kategori: ",
+            style: TextStyle(
+                fontSize: 16
+            ),
+          ),
+          DropdownButton<int>(
+            value: secilenKategori,
+            items: _tumKategoriler.map((kategoriID){
+              return DropdownMenuItem<int>(
+                value: kategoriID,
+                child: Text(
+                  kategoriID == -1
+                      ? "Hepsi"
+                      : Sabitler.kategoriler[kategoriID] ?? "",
+                ),
+              );
+            }).toList(),
+            onChanged: (int? yeniID){
+              if (yeniID != null){
+                setState(() {
+                  secilenKategori = yeniID;
+                });
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
   // *************** CRUD İŞLEMLERİ ***************
 
   Future<Map<String, dynamic>?> _build_alert_dialog(
@@ -348,7 +403,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
   // Veritabanından tüm kitapları getirme fonksiyonu
   Future<void> getirTumKitaplar() async {
-    _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar();
+    _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar(secilenKategori);
   }
 
   void gitBolumler(BuildContext context, KitapModel kitap){
