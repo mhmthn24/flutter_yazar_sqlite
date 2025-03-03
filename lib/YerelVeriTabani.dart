@@ -256,6 +256,36 @@ class YerelVeriTabani {
     return 0; // Eğer silme başarısızsa 0 döndürelim
   }
 
+  Future<int> silSecilenKitaplar(List<int> kitapIDList) async {
+    /*
+    - Verilen kitap ID listesindeki kayıtları veritabanından siler.
+    - Eğer başarılı olursa SİLİNEN SATIR SAYISINI döndürür.
+    - Eğer veritabanına bağlanamazsa veya kayıt bulunamazsa 0 döndürülür.
+  */
+    Database? db = await _getDatabase();
+
+    if(db != null && kitapIDList.isNotEmpty){
+      // Burada filtremizi oluşturalım
+      String filtre = "$_kitap_id IN (";
+
+      // Silinecek her bir eleman için query içine ? ekleyelim.
+      for(int i=0; i < kitapIDList.length; i++){
+        if(i != kitapIDList.length-1){
+          filtre += "?,";
+        }else{
+          filtre += "?)";   // Eğer son elemansa query'deki parantezi kapatalım.
+        }
+      }
+
+      return await db.delete(
+        _kitap_tablo_adi,
+        where: filtre,
+        whereArgs: kitapIDList, // Silinecek kitabın ID'sini verelim
+      );
+    }
+    return 0; // Eğer silme başarısızsa 0 döndürelim
+  }
+
   // ********************** Bölüm Model **********************
   // *********** CRUD (Create, Read, Update, Delete) Operasyonları ***********
 
