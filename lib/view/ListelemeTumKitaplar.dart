@@ -40,6 +40,9 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   List<int> _tumKategoriler = [-1];
   int secilenKategori = -1;
 
+  List<int> _secilenKitapID = [];
+  bool tumKitaplariSec = false;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +64,18 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   AppBar _build_appBar(){
     return AppBar(
       title: Text("Kitaplar"), // Sayfa başlığı
+      actions: [
+        IconButton(
+          onPressed: (){
+             _build_secimleri_sil_alert_dialog(context); // Secilen kitaplari sil
+          },
+          icon: Icon(
+            Icons.delete,
+            size: 40,
+            color: Colors.black,
+          ),
+        ),
+      ],
     );
   }
 
@@ -121,30 +136,29 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         subtitle: Text(
           Sabitler.kategoriler[_tumKitaplar[index].kitap_kategori] ?? "",
         ),
-        leading: CircleAvatar(
-          backgroundColor: Colors.orange,
-          child: Text(
-            _tumKitaplar[index].kitap_id.toString(), // Kitap ID
-            style: TextStyle(
-              color: Colors.black,
-            ),
-          ),
+        leading: Checkbox(
+          value: _secilenKitapID.contains(_tumKitaplar[index].kitap_id),
+          onChanged: (bool? yeniDurum){
+            if(yeniDurum != null){
+              int? cb_id = _tumKitaplar[index].kitap_id;
+              if (cb_id != null){
+                setState(() {
+                  if (yeniDurum){
+                    _secilenKitapID.add(cb_id);
+                  }else{
+                    _secilenKitapID.remove(cb_id);
+                    tumKitaplariSec = false;
+                  }
+                });
+              }
+            }
+          },
         ),
         
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            IconButton(
-              onPressed: (){
-                _silKitap(context, _tumKitaplar[index]); // Kitabı sil
-              },
-              icon: Icon(
-                Icons.delete,
-                size: 40,
-                color: Colors.black,
-              ),
-            ),
             IconButton(
               onPressed: (){
                 _guncelleKitap(context, index); // Kitabı guncelle
@@ -166,10 +180,37 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
   Widget _build_kategoriler(){
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Hepsi", textAlign: TextAlign.center,),
+              Checkbox(
+                value: tumKitaplariSec,
+                onChanged: (bool? yeniDurum){
+                  if(yeniDurum != null){
+                    setState(() {
+                      if (yeniDurum){
+                        _secilenKitapID.clear();
+                        tumKitaplariSec = true;
+                        if(_tumKitaplar.isNotEmpty){
+                          for(int i=0; i < _tumKitaplar.length; i++){
+                            _secilenKitapID.add(_tumKitaplar[i].kitap_id ?? -1);
+                          }
+                        }
+                      }else{
+                        _secilenKitapID.clear();
+                        tumKitaplariSec = false;
+                      }
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
           Text(
             "Kategori: ",
             style: TextStyle(
@@ -200,6 +241,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
       ),
     );
   }
+
   // *************** CRUD İŞLEMLERİ ***************
 
   Future<Map<String, dynamic>?> _build_alert_dialog(
@@ -318,6 +360,43 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     );
   }
 
+  Future<bool?> _build_secimleri_sil_alert_dialog(
+      BuildContext context
+      ){
+    return showDialog<bool>(context: context, builder: (BuildContext context){
+      return AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Seçilen kitapları silmek istediğinize emin misiniz?"),
+          ],
+        ),
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: (){
+                  Navigator.pop(context);
+                },
+                child: Text("Hayır"),
+              ),
+              TextButton(
+                onPressed: (){
+                  Navigator.pop(context);
+                  _secilenKitaplariSil();
+                },
+                child: Text("Evet"),
+              ),
+            ],
+          )
+        ],
+      );
+    });
+  }
+
+
   // Yeni kitap ekleme fonksiyonu
   void _ekleKitap(BuildContext context) async {
 
@@ -336,21 +415,6 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         setState(() {});
       }
     }
-    /*
-    if(kitapAdi != null){
-      KitapModel kitap = KitapModel(
-        kitapAdi,
-        DateTime.now(),
-        DateTime.now(),
-        Sabitler.kategoriler[]
-      );
-      int eklenenKitapId = await _yerelVeriTabani.ekleKitap(kitap);
-
-      if(eklenenKitapId != -1){
-        setState(() {});
-      }
-    }
-     */
   }
 
   // Seçilen kitabı silme fonksiyonu
@@ -358,6 +422,16 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     int silinenSatirSayisi = await _yerelVeriTabani.silKitap(kitap);
     if (silinenSatirSayisi != 0){
       setState(() {});
+    }
+  }
+
+  void _secilenKitaplariSil() async {
+    int silinenSatirSayisi = await _yerelVeriTabani.silSecilenKitaplar(_secilenKitapID);
+    if(silinenSatirSayisi != 0){
+      setState(() {
+        _secilenKitapID.clear();
+        tumKitaplariSec = false;
+      });
     }
   }
 
