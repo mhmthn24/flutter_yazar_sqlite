@@ -36,6 +36,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
 
   // Kullanıcının kitap adı girmesi için TextField kontrolcüsü
   final TextEditingController _controllerKitapAdi = TextEditingController();
+  final ScrollController _controllerScroll = ScrollController();
 
   List<int> _tumKategoriler = [-1];
   int secilenKategori = -1;
@@ -47,6 +48,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   void initState() {
     super.initState();
     _tumKategoriler.addAll(Sabitler.kategoriler.keys);
+    _controllerScroll.addListener(_kaydirmaKontrol);
   }
 
   @override
@@ -93,7 +95,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   // Sayfanın ana içeriği: Tüm kitapları listeleyen FutureBuilder
   Widget _build_body(BuildContext context){
     return FutureBuilder(
-      future: getirTumKitaplar(), // Veritabanından kitapları alalım
+      future: getirIlkKitaplar(), // Veritabanından kitapları alalım
       builder: _build_FutureBuilder
     );
   }
@@ -105,6 +107,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
         _build_kategoriler(),
         Expanded(
           child: ListView.builder(
+            controller: _controllerScroll,
             itemCount: _tumKitaplar.length, // Toplam kitap sayısı
             itemBuilder: _build_ListView, // Her bir kitabı listede göster
           ),
@@ -169,6 +172,12 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
                 color: Colors.black,
               ),
             ),
+            IconButton(
+              onPressed: (){
+                gitBolumler(context, _tumKitaplar[index]);
+              },
+              icon: Icon(Icons.arrow_forward_ios),
+            ),
           ],
         ),
         onTap: (){
@@ -232,7 +241,9 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
             onChanged: (int? yeniID){
               if (yeniID != null){
                 setState(() {
+                  _tumKitaplar.clear();
                   secilenKategori = yeniID;
+                  getirIlkKitaplar();
                 });
               }
             },
@@ -412,6 +423,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
       int eklenenKitapId = await _yerelVeriTabani.ekleKitap(kitap);
 
       if(eklenenKitapId != -1){
+        _tumKitaplar.clear();
         setState(() {});
       }
     }
@@ -421,6 +433,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   void _silKitap(BuildContext context, KitapModel kitap) async {
     int silinenSatirSayisi = await _yerelVeriTabani.silKitap(kitap);
     if (silinenSatirSayisi != 0){
+      _tumKitaplar.clear();
       setState(() {});
     }
   }
@@ -430,6 +443,7 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
     if(silinenSatirSayisi != 0){
       setState(() {
         _secilenKitapID.clear();
+        _tumKitaplar.clear();
         tumKitaplariSec = false;
       });
     }
@@ -476,8 +490,23 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   }
 
   // Veritabanından tüm kitapları getirme fonksiyonu
-  Future<void> getirTumKitaplar() async {
-    _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar(secilenKategori);
+  Future<void> getirIlkKitaplar() async {
+    if(_tumKitaplar.isEmpty){
+      _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar(secilenKategori, 0);
+    }
+  }
+
+  Future<void> getirSonrakiKitaplar() async {
+    int? sonKitapID = _tumKitaplar.last.kitap_id;
+
+    if(sonKitapID != null){
+      List<KitapModel> sonrakiKitaplar = await _yerelVeriTabani.getirTumKitaplar(
+        secilenKategori,
+        sonKitapID,
+      );
+      _tumKitaplar.addAll(sonrakiKitaplar);
+      setState(() {});
+    }
   }
 
   void gitBolumler(BuildContext context, KitapModel kitap){
@@ -485,5 +514,11 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
       return Listelemekitapbolumler(kitap);
     });
     Navigator.push(context, gidilecekSayfa);
+  }
+
+  void _kaydirmaKontrol() {
+    if(_controllerScroll.offset == _controllerScroll.position.maxScrollExtent){
+      getirSonrakiKitaplar();
+    }
   }
 }
