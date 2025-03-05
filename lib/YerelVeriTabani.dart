@@ -163,7 +163,7 @@ class YerelVeriTabani {
     }
   }
 
-  Future<List<KitapModel>> getirTumKitaplar(int kategori_id) async {
+  Future<List<KitapModel>> getirTumKitaplar(int kategori_id, int sonKitapID) async {
     /*
     - Veritabanında bulunan TÜM kitapları liste halinde getirir.
     - "KitapModel" nesnesine dönüştürerek geri döndürür.
@@ -172,18 +172,20 @@ class YerelVeriTabani {
     Database? db = await _getDatabase();
     List<KitapModel> kitaplar = [];
     if(db != null){
-      String? filtre;
-      List<dynamic> filtreArgs = [];
+      String filtre = "$_kitap_id > ?";
+      List<dynamic> filtreArgs = [sonKitapID];
 
       if(kategori_id >= 0){
-        filtre = "$_kitap_kategori = ?";
+        filtre += " and $_kitap_kategori = ?";
         filtreArgs.add(kategori_id);
       }
 
       List<Map<String, dynamic>> tumKitaplar = await db.query(
         _kitap_tablo_adi,
         where: filtre,
-        whereArgs: filtreArgs
+        whereArgs: filtreArgs,
+        orderBy: "$_kitap_id ASC",
+        limit: 15
       );
 
       for(Map<String, dynamic> map in tumKitaplar){
