@@ -119,14 +119,6 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
   // **ListView içinde tek bir kitap kartını oluşturur**
   Widget _build_ListView(BuildContext context, int index){
 
-    // Oluşturulma tarihini okunaklı bir formata çevirelim
-    DateTime cdate = _tumKitaplar[index].kitap_cdate;
-    String formattedCdate = "${cdate.day}/${cdate.month}/${cdate.year}";
-
-    // Güncellenme tarihini okunaklı bir formata çevir
-    DateTime udate = _tumKitaplar[index].kitap_udate;
-    String formattedUdate = "${udate.day}/${udate.month}/${udate.year}";
-
     return Card(
       color: Colors.cyanAccent, // Kartın arka plan rengini belirleyelim
       child: ListTile(
@@ -148,6 +140,9 @@ class _ListelemetumkitaplarState extends State<Listelemetumkitaplar> {
                 setState(() {
                   if (yeniDurum){
                     _secilenKitapID.add(cb_id);
+                    if(_tumKitaplar.isNotEmpty && _secilenKitapID.length == _tumKitaplar.length){
+                      tumKitaplariSec = true;
+                    }
                   }else{
                     _secilenKitapID.remove(cb_id);
                     tumKitaplariSec = false;

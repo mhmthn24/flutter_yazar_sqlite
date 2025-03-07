@@ -74,14 +74,6 @@ class _ListelemekitapbolumlerState extends State<Listelemekitapbolumler> {
   // **ListView içinde tek bir bolum kartını oluşturur**
   Widget _build_ListView(BuildContext context, int index){
 
-    // Oluşturulma tarihini okunaklı bir formata çevirelim
-    DateTime cdate = _tumBolumler[index].bolum_cdate;
-    String formattedCdate = "${cdate.day}/${cdate.month}/${cdate.year}";
-
-    // Güncellenme tarihini okunaklı bir formata çevir
-    DateTime udate = _tumBolumler[index].bolum_udate;
-    String formattedUdate = "${udate.day}/${udate.month}/${udate.year}";
-
     return Card(
       color: Colors.cyanAccent, // Kartın arka plan rengini belirleyelim
       child: ListTile(
