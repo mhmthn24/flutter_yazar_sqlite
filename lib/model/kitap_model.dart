@@ -16,16 +16,16 @@ class KitapModel {
   KitapModel.fromMap(Map<String, dynamic> map):
       kitap_id = map["kitap_id"],
       kitap_ad = map["kitap_ad"],
-      kitap_cdate = DateTime.fromMillisecondsSinceEpoch(map["kitap_cdate"]),
-      kitap_udate = DateTime.fromMillisecondsSinceEpoch(map["kitap_udate"]),
+      kitap_cdate = map["kitap_cdate"],
+      kitap_udate = map["kitap_udate"],
       kitap_kategori = map["kitap_kategori"];
 
   Map<String, dynamic> toMap(){
     return {
       "kitap_id": kitap_id,
       "kitap_ad": kitap_ad,
-      "kitap_cdate": kitap_cdate.millisecondsSinceEpoch,
-      "kitap_udate": kitap_udate.millisecondsSinceEpoch,
+      "kitap_cdate": kitap_cdate,
+      "kitap_udate": kitap_udate,
       "kitap_kategori": kitap_kategori
     };
   }

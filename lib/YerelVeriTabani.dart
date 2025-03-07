@@ -156,7 +156,7 @@ class YerelVeriTabani {
     if(db != null){
       // Eğer bağlantı başarılıysa kitabı ekleyelim ve
       // eklenen verinin ID değerini döndürelim
-      return await db.insert(_kitap_tablo_adi, kitap.toMap());
+      return await db.insert(_kitap_tablo_adi, _kitapToMap(kitap));
     }else{
       // Başarısızsa -1 hata kodu döndürelim.
       return -1;
@@ -189,7 +189,7 @@ class YerelVeriTabani {
       );
 
       for(Map<String, dynamic> map in tumKitaplar){
-        KitapModel kitap = KitapModel.fromMap(map);
+        KitapModel kitap = _mapToKitap(map);
         kitaplar.add(kitap);
       }
     }
@@ -211,7 +211,7 @@ class YerelVeriTabani {
           whereArgs: [kitapParam.kitap_id] // Sadece belirli ID'deki kitabı getirelim
       );
       if (mapList.isNotEmpty) {
-        return [KitapModel.fromMap(mapList[0])]; // İlk bulunan kaydı döndürelim
+        return [_mapToKitap(mapList[0])]; // İlk bulunan kaydı döndürelim
       } else {
         return [];  // Eğer kayıt yoksa boş liste döndürelim
       }
@@ -231,7 +231,7 @@ class YerelVeriTabani {
     if(db != null){
       return await db.update(
         _kitap_tablo_adi,
-        kitap.toMap(),
+        _kitapToMap(kitap),
         where: "$_kitap_id = ?", // Güncellenecek kitabı ID ile bulalım
         whereArgs: [kitap.kitap_id],
       );
@@ -378,6 +378,27 @@ class YerelVeriTabani {
       where: "$_bolum_id = ?",
       whereArgs: [bolum.bolum_id], // Silinecek kitabın ID'sini verelim
     );
+  }
+
+  Map<String, dynamic> _kitapToMap(KitapModel kitap) {
+    Map<String, dynamic> kitapMap = kitap.toMap();
+    DateTime? cdate = kitapMap["kitap_cdate"];
+    DateTime? udate = kitapMap["kitap_udate"];
+
+    if(cdate != null && udate != null){
+      kitapMap["kitap_cdate"] = cdate.millisecondsSinceEpoch;
+      kitapMap["kitap_udate"] = udate.millisecondsSinceEpoch;
+    }
+    return kitapMap;
+  }
+
+  KitapModel _mapToKitap(Map<String, dynamic> map) {
+    return KitapModel(
+      map["kitap_ad"],
+      DateTime.fromMillisecondsSinceEpoch(map["kitap_cdate"]),
+      DateTime.fromMillisecondsSinceEpoch(map["kitap_udate"]),
+      map["kitap_kategori"],
+    )..kitap_id = map["kitap_id"]; // Eğer kitap_id nullable ise sonradan atama yap
   }
 
 }
