@@ -302,7 +302,7 @@ class YerelVeriTabani {
 
     // Eğer bağlantı başarılıysa kitabı ekleyelim ve
     // eklenen verinin ID değerini döndürelim
-    return await db.insert(_bolum_tablo_adi, bolum.toMap());
+    return await db.insert(_bolum_tablo_adi, _bolumToMap(bolum));
   }
 
   Future<List<BolumModel>> getirKitabinTumBolumleri(KitapModel kitap) async {
@@ -321,7 +321,7 @@ class YerelVeriTabani {
     );
 
     for(Map<String, dynamic> map in tumBolumler){
-      BolumModel bolum = BolumModel.fromMap(map); // Haritayı modele çevir
+      BolumModel bolum = _mapToBolum(map); // Haritayı modele çevir
       bolumler.add(bolum); // Listeye ekle
     }
     return bolumler; // Kitap listesi döndürülür
@@ -359,7 +359,7 @@ class YerelVeriTabani {
 
     return await db.update(
       _bolum_tablo_adi,
-      bolum.toMap(),
+      _bolumToMap(bolum),
       where: "$_bolum_id = ?", // Güncellenecek kitabı ID ile bulalım
       whereArgs: [bolum.bolum_id],
     );
@@ -399,6 +399,27 @@ class YerelVeriTabani {
       DateTime.fromMillisecondsSinceEpoch(map["kitap_udate"]),
       map["kitap_kategori"],
     )..kitap_id = map["kitap_id"]; // Eğer kitap_id nullable ise sonradan atama yap
+  }
+
+  Map<String, Object?> _bolumToMap(BolumModel bolum) {
+    Map<String, dynamic> bolumMap = bolum.toMap();
+    DateTime? cdate = bolumMap["bolum_cdate"];
+    DateTime? udate = bolumMap["bolum_udate"];
+
+    if(cdate != null && udate != null){
+      bolumMap["bolum_cdate"] = cdate.millisecondsSinceEpoch;
+      bolumMap["bolum_udate"] = udate.millisecondsSinceEpoch;
+    }
+    return bolumMap;
+  }
+
+  BolumModel _mapToBolum(Map<String, dynamic> map) {
+    return BolumModel(
+      map["bolum_ad"],
+      map["bolum_kitap_id"],
+      DateTime.fromMillisecondsSinceEpoch(map["bolum_cdate"]),
+      DateTime.fromMillisecondsSinceEpoch(map["bolum_udate"]),
+    )..bolum_id = map["bolum_id"];
   }
 
 }

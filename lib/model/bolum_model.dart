@@ -1,5 +1,5 @@
 class BolumModel {
-  int? bolum_id;
+  dynamic bolum_id;
   int? bolum_kitap_id;
   String bolum_ad;
   String bolum_icerik;
@@ -18,8 +18,8 @@ class BolumModel {
     bolum_kitap_id = map["bolum_kitap_id"],
     bolum_ad = map["bolum_ad"],
     bolum_icerik = map["bolum_icerik"],
-    bolum_cdate = DateTime.fromMillisecondsSinceEpoch(map["bolum_cdate"]),
-    bolum_udate = DateTime.fromMillisecondsSinceEpoch(map["bolum_udate"]);
+    bolum_cdate = map["bolum_cdate"],
+    bolum_udate = map["bolum_udate"];
 
   Map<String, dynamic> toMap(){
     return {
@@ -27,8 +27,8 @@ class BolumModel {
       "bolum_kitap_id" : bolum_kitap_id,
       "bolum_ad" : bolum_ad,
       "bolum_icerik" : bolum_icerik,
-      "bolum_cdate" : bolum_cdate.millisecondsSinceEpoch,
-      "bolum_udate" : bolum_udate.millisecondsSinceEpoch,
+      "bolum_cdate" : bolum_cdate,
+      "bolum_udate" : bolum_udate,
     };
   }
   
