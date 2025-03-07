@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_yazar_sqlite/view/ListelemeTumKitaplar.dart';
+import 'package:flutter_yazar_sqlite/view/listeleme_kitaplar.dart';
 
 void main() {
   runApp(AnaUygulama());

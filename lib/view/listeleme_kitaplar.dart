@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 import 'package:flutter_yazar_sqlite/sabitler.dart';
-import 'package:flutter_yazar_sqlite/view/ListelemeKitapBolumler.dart';
+import 'package:flutter_yazar_sqlite/view/listeleme_bolumler.dart';
 
 /*
   Bu sınıf, SQLite ile saklanan kitapları listelemek ve
