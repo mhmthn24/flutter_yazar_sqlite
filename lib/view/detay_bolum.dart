@@ -1,47 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
+import 'package:flutter_yazar_sqlite/view_model/detay_bolum_view_model.dart';
+import 'package:provider/provider.dart';
 
-class Detaybolum extends StatefulWidget {
-  BolumModel _bolum;
+class Detaybolum extends StatelessWidget {
 
-  Detaybolum(this._bolum, {super.key});
+  TextEditingController _controllerLocal = TextEditingController();
 
-  @override
-  State<Detaybolum> createState() => _DetaybolumState();
-}
-
-class _DetaybolumState extends State<Detaybolum> {
-  YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
-
-  TextEditingController _controllerIcerik = TextEditingController();
-
-  bool degisiklikVar = false;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _controllerIcerik.text = widget._bolum.bolum_icerik;
-  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: _buildAppBar(),
-        body: _buildBody(),
+        appBar: _buildAppBar(context),
+        body: _buildBody(context),
       ),
     );
   }
 
-  AppBar _buildAppBar(){
+  AppBar _buildAppBar(BuildContext context){
+    DetayBolumViewModel viewModel = Provider.of<DetayBolumViewModel>(
+      context,
+      listen: false,
+    );
+
     return AppBar(
-      title: Text(widget._bolum.bolum_ad),
+      title: Text(viewModel.bolum.bolum_ad),
       automaticallyImplyLeading: false,
       leading: IconButton(
         onPressed: () async {
-          if(degisiklikVar){
-            _buildAlertDialog(context);
+          if(viewModel.degisiklikVar){
+            viewModel.buildAlertDialog(context);
           }else{
             Navigator.pop(context);
           }
@@ -50,11 +39,9 @@ class _DetaybolumState extends State<Detaybolum> {
       ),
       actions: [
         IconButton(
-          onPressed: degisiklikVar
-            ?(){
-              _icerigiKaydet();
-            }
-            : null,
+          onPressed: (){
+              viewModel.icerigiKaydet(viewModel.controllerIcerik.text);
+              },
           icon: Icon(
             Icons.save,
             size: 35,
@@ -64,71 +51,34 @@ class _DetaybolumState extends State<Detaybolum> {
     );
   }
 
-  Widget _buildBody(){
+  Widget _buildBody(BuildContext context){
+    DetayBolumViewModel viewModel = Provider.of<DetayBolumViewModel>(
+      context,
+      listen: false,
+    );
+    _controllerLocal.text = viewModel.bolum.bolum_icerik;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: TextField(
-        controller: _controllerIcerik,
+        controller: viewModel.controllerIcerik,
         maxLines: 1000,
         decoration: InputDecoration(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12)
-          )
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12)
+            )
         ),
         onChanged: (String? yeniGiris) async {
           if(yeniGiris != null){
-            setState(() {
-              _controllerIcerik.text = yeniGiris;
-              if(yeniGiris != widget._bolum.bolum_icerik){
-                degisiklikVar = true;
-              }
-            });
+            viewModel.controllerIcerik.text = yeniGiris;
+            if(yeniGiris != viewModel.bolum.bolum_icerik){
+              viewModel.degisiklikVar = true;
+            }
           }
         },
       ),
     );
   }
 
-  void _icerigiKaydet() async {
-    widget._bolum.bolum_icerik = _controllerIcerik.text;
-    widget._bolum.bolum_udate = DateTime.now();
-    await _yerelVeriTabani.guncelleBolum(widget._bolum);
-    setState(() {
-      degisiklikVar = false;
-    });
-  }
 
-  Future<bool?> _buildAlertDialog(BuildContext context){
-    return showDialog<bool>(context: context, builder: (context){
-      return AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("Değişiklikleri kaydetmek ister misiniz?"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                TextButton(
-                  onPressed: (){
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
-                  child: Text("Hayır"),
-                ),
-                TextButton(
-                  onPressed: (){
-                    _icerigiKaydet();
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
-                  child: Text("Evet"),
-                ),
-              ],
-            )
-          ],
-        ),
-      );
-    });
-  }
 }
