@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
 import 'package:flutter_yazar_sqlite/view/detay_bolum.dart';

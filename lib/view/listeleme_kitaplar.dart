@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
-import 'package:flutter_yazar_sqlite/sabitler.dart';
+import 'package:flutter_yazar_sqlite/tools/sabitler.dart';
 import 'package:flutter_yazar_sqlite/view/listeleme_bolumler.dart';
 import 'package:flutter_yazar_sqlite/view_model/listeleme_kitaplar_view_model.dart';
 import 'package:provider/provider.dart';
@@ -114,7 +113,6 @@ class Listelemetumkitaplar extends StatelessWidget {
           leading: Checkbox(
             value: kitap.seciliMi,
             onChanged: (bool? yeniDurum){
-              print("Secilenler: ${viewModel.secilenKitapID}");
               if(yeniDurum != null){
                 int? cb_id = kitap.kitap_id;
                 if (cb_id != null){
