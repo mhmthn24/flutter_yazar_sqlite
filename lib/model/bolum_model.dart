@@ -1,4 +1,6 @@
-class BolumModel {
+import 'package:flutter/material.dart';
+
+class BolumModel with ChangeNotifier{
   dynamic bolum_id;
   int? bolum_kitap_id;
   String bolum_ad;
