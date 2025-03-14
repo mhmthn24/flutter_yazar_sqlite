@@ -1,10 +1,20 @@
-class KitapModel {
+import 'package:flutter/material.dart';
+
+class KitapModel with ChangeNotifier{
 
   int? kitap_id;
   String kitap_ad;
   DateTime kitap_cdate;
   DateTime kitap_udate;
   int kitap_kategori;
+  bool _seciliMi = false;
+
+  bool get seciliMi => _seciliMi;
+
+  set seciliMi(bool value) {
+    _seciliMi = value;
+    notifyListeners();
+  }
 
   KitapModel(
       this.kitap_ad,
@@ -28,6 +38,13 @@ class KitapModel {
       "kitap_udate": kitap_udate,
       "kitap_kategori": kitap_kategori
     };
+  }
+
+  void guncelleKitap(String yeniIsim, int yeniKategori, DateTime udate){
+    kitap_ad = yeniIsim;
+    kitap_kategori = yeniKategori;
+    kitap_udate = udate;
+    notifyListeners();
   }
 
 }
