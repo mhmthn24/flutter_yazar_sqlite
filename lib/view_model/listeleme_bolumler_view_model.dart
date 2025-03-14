@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
+import 'package:flutter_yazar_sqlite/repository/database_repository.dart';
+import 'package:flutter_yazar_sqlite/tools/locator.dart';
 import 'package:flutter_yazar_sqlite/view/detay_bolum.dart';
 import 'package:flutter_yazar_sqlite/view_model/detay_bolum_view_model.dart';
 import 'package:provider/provider.dart';
 
 class ListelemeBolumlerViewModel with ChangeNotifier{
 
-  final YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
+  final DatabaseRepository _databaseRepository = locator<DatabaseRepository>();
 
   // Kullanıcının bolum adı girmesi için TextField kontrolcüsü
   TextEditingController _controllerBolumAdi = TextEditingController();
@@ -117,7 +118,7 @@ class ListelemeBolumlerViewModel with ChangeNotifier{
         DateTime.now(),
         DateTime.now(),
       );
-      int eklenenBolumId = await _yerelVeriTabani.ekleBolum(bolum);
+      int eklenenBolumId = await _databaseRepository.ekleBolum(bolum);
 
       if(eklenenBolumId != -1){
         bolum.bolum_id = eklenenBolumId;
@@ -129,7 +130,7 @@ class ListelemeBolumlerViewModel with ChangeNotifier{
 
   // Seçilen kitabı silme fonksiyonu
   void silBolum(BuildContext context, BolumModel bolum) async {
-    int silinenSatirSayisi = await _yerelVeriTabani.silBolum(bolum);
+    int silinenSatirSayisi = await _databaseRepository.silBolum(bolum);
     if (silinenSatirSayisi != 0){
       _tumBolumler.remove(bolum);
       notifyListeners();
@@ -148,7 +149,7 @@ class ListelemeBolumlerViewModel with ChangeNotifier{
       bolum.bolum_ad = yeniBolumBaslik;
       bolum.bolum_udate = DateTime.now();
 
-      int guncellenenSatirSayisi = await _yerelVeriTabani.guncelleBolum(bolum);
+      int guncellenenSatirSayisi = await _databaseRepository.guncelleBolum(bolum);
 
       if(guncellenenSatirSayisi > 0){
         notifyListeners();
@@ -158,7 +159,7 @@ class ListelemeBolumlerViewModel with ChangeNotifier{
 
   // Veritabanından tüm bolumları getirme fonksiyonu
   Future<void> getirTumBolumlar() async {
-    _tumBolumler = await _yerelVeriTabani.getirKitabinTumBolumleri(_kitap);
+    _tumBolumler = await _databaseRepository.getirKitabinTumBolumleri(_kitap);
     notifyListeners();
   }
 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/kitap_model.dart';
-import 'package:flutter_yazar_sqlite/sabitler.dart';
+import 'package:flutter_yazar_sqlite/repository/database_repository.dart';
+import 'package:flutter_yazar_sqlite/tools/locator.dart';
+import 'package:flutter_yazar_sqlite/tools/sabitler.dart';
 import 'package:flutter_yazar_sqlite/view/listeleme_bolumler.dart';
 import 'package:flutter_yazar_sqlite/view_model/listeleme_bolumler_view_model.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -9,7 +10,7 @@ import 'package:provider/provider.dart';
 
 class ListelemeKitaplarViewModel with ChangeNotifier{
 
-  final YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
+  final DatabaseRepository _databaseRepository = locator<DatabaseRepository>();
 
   // Veritabanından çekilen tüm kitapların tutulduğu liste
   List<KitapModel> _tumKitaplar = [];
@@ -193,7 +194,7 @@ class ListelemeKitaplarViewModel with ChangeNotifier{
           DateTime.now(),
           alertGelenParams["kitap_kategori"]
       );
-      int eklenenKitapId = await _yerelVeriTabani.ekleKitap(kitap);
+      int eklenenKitapId = await _databaseRepository.ekleKitap(kitap);
 
       if(eklenenKitapId != -1){
         notifyListeners();
@@ -203,7 +204,7 @@ class ListelemeKitaplarViewModel with ChangeNotifier{
 
   // Seçilen kitabı silme fonksiyonu
   void silKitap(BuildContext context, KitapModel kitap) async {
-    int silinenSatirSayisi = await _yerelVeriTabani.silKitap(kitap);
+    int silinenSatirSayisi = await _databaseRepository.silKitap(kitap);
     if (silinenSatirSayisi >= 0){
       _tumKitaplar.remove(kitap);
       notifyListeners();
@@ -211,7 +212,7 @@ class ListelemeKitaplarViewModel with ChangeNotifier{
   }
 
   void secilenKitaplariSil() async {
-    int silinenSatirSayisi = await _yerelVeriTabani.silSecilenKitaplar(_secilenKitapID);
+    int silinenSatirSayisi = await _databaseRepository.silSecilenKitaplar(_secilenKitapID);
     if(silinenSatirSayisi != 0){
       _tumKitaplar.removeWhere((kitap) => _secilenKitapID.contains(kitap.kitap_id));
       _secilenKitapID.clear();
@@ -231,14 +232,14 @@ class ListelemeKitaplarViewModel with ChangeNotifier{
       int yeniKategori = alertGelenParam["kitap_kategori"];
       DateTime udate = DateTime.now();
       _kitap.guncelleKitap(yeniIsim, yeniKategori, udate);
-      await _yerelVeriTabani.guncelleKitap(_kitap);
+      await _databaseRepository.guncelleKitap(_kitap);
     }
   }
 
   // Veritabanından tüm kitapları getirme fonksiyonu
   Future<void> getirIlkKitaplar() async {
     if(_tumKitaplar.isEmpty){
-      _tumKitaplar = await _yerelVeriTabani.getirTumKitaplar(_secilenKategori, 0);
+      _tumKitaplar = await _databaseRepository.getirTumKitaplar(_secilenKategori, 0);
     }
     notifyListeners();
   }
@@ -247,7 +248,7 @@ class ListelemeKitaplarViewModel with ChangeNotifier{
     int? sonKitapID = _tumKitaplar.last.kitap_id;
 
     if(sonKitapID != null){
-      List<KitapModel> sonrakiKitaplar = await _yerelVeriTabani.getirTumKitaplar(
+      List<KitapModel> sonrakiKitaplar = await _databaseRepository.getirTumKitaplar(
         _secilenKategori,
         sonKitapID,
       );

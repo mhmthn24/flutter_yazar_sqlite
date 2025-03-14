@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_yazar_sqlite/YerelVeriTabani.dart';
 import 'package:flutter_yazar_sqlite/model/bolum_model.dart';
+import 'package:flutter_yazar_sqlite/repository/database_repository.dart';
+import 'package:flutter_yazar_sqlite/tools/locator.dart';
 
 class DetayBolumViewModel with ChangeNotifier{
 
-  YerelVeriTabani _yerelVeriTabani = YerelVeriTabani();
+  final DatabaseRepository _databaseRepository = locator<DatabaseRepository>();
 
   bool _degisiklikVar = false;
   bool get degisiklikVar => _degisiklikVar;
@@ -28,10 +29,9 @@ class DetayBolumViewModel with ChangeNotifier{
   }
 
   void icerigiKaydet(String icerik) async {
-    print("İçerik: $icerik");
     _bolum.bolum_icerik = icerik;
     _bolum.bolum_udate = DateTime.now();
-    await _yerelVeriTabani.guncelleBolum(_bolum);
+    await _databaseRepository.guncelleBolum(_bolum);
 
     _controllerIcerik.text = icerik; // Güncellenen metni TextField'a geri yaz
     degisiklikVar = false; // Kaydetme tamamlandı
